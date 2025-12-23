@@ -1,44 +1,1187 @@
 <!doctype html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0F766E" />
-  <link rel="manifest" href="./manifest.webmanifest" />
   <title>Travel Plan</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+
+  <!-- Material-ish UI: Materialize (no build, pure CDN) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/materialize-css@1.0.0/dist/css/materialize.min.css">
+
   <style>
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",system-ui;background:#f7f7f7;color:#111}
-    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
-    .card{background:#fff;border-radius:16px;padding:20px 18px;box-shadow:0 10px 25px rgba(0,0,0,.08);max-width:520px;width:100%}
-    .muted{color:#666;font-size:14px;line-height:1.5}
-    .btn{margin-top:14px;display:inline-block;background:#0F766E;color:#fff;text-decoration:none;padding:10px 14px;border-radius:12px;font-weight:700}
-    code{background:#f1f1f1;padding:2px 6px;border-radius:8px}
+    :root{
+      --teal:#0F766E;
+      --teal2:#0b5e57;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --chip:#e2e8f0;
+      --danger:#ef4444;
+      --ok:#16a34a;
+      --shadow: 0 10px 25px rgba(2, 6, 23, .10);
+    }
+    html,body{height:100%; background:var(--bg); font-family:Roboto, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;}
+    .appbar{
+      position:sticky; top:0; z-index:20;
+      background:linear-gradient(180deg,var(--teal),var(--teal2));
+      color:#fff; padding:14px 14px 10px;
+      box-shadow: 0 6px 18px rgba(2,6,23,.18);
+    }
+    .appbar .row{margin:0;}
+    .title-wrap{display:flex; align-items:center; gap:10px;}
+    .title-wrap .back{
+      width:40px;height:40px;border-radius:999px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,.14);
+    }
+    .title h1{font-size:20px; margin:0; font-weight:700; letter-spacing:.3px;}
+    .subtitle{opacity:.9; font-size:12px; margin-top:2px;}
+    .top-actions{display:flex; gap:8px; justify-content:flex-end;}
+    .iconbtn{
+      width:44px;height:44px;border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .iconbtn.active{background:#fff;color:var(--teal); border-color:#fff;}
+    .daystrip{display:flex; gap:8px; overflow:auto; padding:10px 2px 2px;}
+    .daypill{
+      min-width:74px;
+      border-radius:14px;
+      padding:10px 10px;
+      background:rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.14);
+      color:#fff;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+    }
+    .daypill.active{background:#fff;color:var(--teal); border-color:#fff; font-weight:700;}
+    .daypill .d{font-size:12px; opacity:.95;}
+    .daypill .dn{font-size:18px; font-weight:800; margin-top:2px;}
+    main{padding:14px;}
+    .cardx{
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .section-title{font-size:14px; color:var(--muted); margin:0 0 10px; font-weight:700; letter-spacing:.2px;}
+    .toolbar-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .btn-teal{background:var(--teal) !important;}
+    .btn-teal:hover{background:var(--teal2) !important;}
+    .muted{color:var(--muted);}
+    .small{font-size:12px;}
+    .tiny{font-size:11px;}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .dividerx{height:1px;background:#e8eef6;margin:12px 0;}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+    @media (max-width:420px){ .grid2,.grid3{grid-template-columns:1fr;} }
+
+    /* Itinerary cards */
+    .item{
+      border-radius:16px;
+      border:1px solid #e6edf6;
+      padding:12px;
+      background:#fff;
+    }
+    .item-head{
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+    }
+    .timebox{
+      width:88px;
+      border-radius:14px;
+      background:#f1f5f9;
+      padding:10px;
+      text-align:center;
+      border:1px solid #e2e8f0;
+      flex:0 0 auto;
+    }
+    .timebox .t{font-size:20px;font-weight:800; line-height:1;}
+    .timebox .edit{font-size:11px;color:var(--muted); margin-top:6px;}
+    .meta{flex:1 1 auto; min-width:0;}
+    .meta .name{font-weight:800; font-size:16px; margin:0; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .meta .place{margin-top:6px; display:flex; gap:6px; align-items:flex-start; color:var(--muted);}
+    .meta .place i{font-size:18px; margin-top:1px;}
+    .meta .place .addr{min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .badge-loc{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px;
+      background:#ecfdf5; color:#065f46; border:1px solid #bbf7d0;
+      font-weight:700; font-size:12px;
+    }
+    .badge-noloc{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px;
+      background:#f1f5f9; color:#334155; border:1px solid #e2e8f0;
+      font-weight:700; font-size:12px;
+    }
+    .item-actions{display:flex; gap:8px; align-items:center;}
+    .icon-danger{color:var(--danger);}
+
+    .pillgroup{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+    .pill{
+      padding:8px 12px; border-radius:999px;
+      border:1px solid #e2e8f0;
+      background:#fff;
+      font-weight:700;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .pill.active{background:#e6fffb; border-color:#99f6e4; color:#134e4a;}
+    .pill i{font-size:16px;}
+
+    .rowtight{margin:0;}
+    .fieldrow{display:grid; grid-template-columns:1.2fr .8fr; gap:10px; margin-top:10px;}
+    @media (max-width:420px){ .fieldrow{grid-template-columns:1fr;} }
+
+    .route{
+      margin:12px 0 0;
+      padding:10px 12px;
+      border-radius:14px;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .route .mode{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    }
+    .route .modechip{
+      padding:8px 10px; border-radius:999px;
+      border:1px solid #e2e8f0; background:#fff;
+      font-weight:800; font-size:12px;
+      display:inline-flex; align-items:center; gap:6px;
+      cursor:pointer;
+    }
+    .route .modechip.active{background:#eef2ff; border-color:#c7d2fe; color:#1e3a8a;}
+    .route .dur{font-weight:800; color:#0f172a;}
+    .route .btn-flat{padding:0 10px; height:34px; line-height:34px;}
+    .spacer{flex:1 1 auto;}
+    .hint{font-size:11px;color:var(--muted);}
+
+    /* Budget */
+    .bigmoney{font-size:44px; font-weight:900; margin:0; letter-spacing:.5px;}
+    .money-sub{font-size:14px;color:#e6fffb; opacity:.95; margin-top:4px;}
+    .money-card{
+      background:linear-gradient(180deg,var(--teal),var(--teal2));
+      color:#fff;
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .ratebox{
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    .dailylist .drow{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 12px;
+      border:1px solid #e2e8f0;
+      border-radius:14px;
+      margin-top:8px;
+      background:#fff;
+    }
+
+    /* Translate */
+    textarea{min-height:120px !important;}
+    .qchips{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+    .qchips .chip{cursor:pointer; user-select:none;}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h2>✅ PWA 正常</h2>
-      <p class="muted">
-        如果你看得到這頁，代表 GitHub Pages 已經能正確提供 <code>index.html</code>。<br/>
-        下一步就是把你的「完整版 Travel Plan」內容貼回來（確保不是只貼到幾行文字）。
-      </p>
-      <a class="btn" href="./index.html">重新載入</a>
-      <p class="muted" id="swState" style="margin-top:14px;"></p>
+
+  <header class="appbar">
+    <div class="row">
+      <div class="col s8">
+        <div class="title-wrap">
+          <div class="back"><i class="material-icons">arrow_back</i></div>
+          <div class="title">
+            <h1 id="tripTitle">Travel Plan</h1>
+            <div class="subtitle" id="tripDates">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col s4">
+        <div class="top-actions">
+          <div class="iconbtn active" id="btnItin" title="行程"><i class="material-icons">event</i></div>
+          <div class="iconbtn" id="btnTranslate" title="翻譯"><i class="material-icons">g_translate</i></div>
+          <div class="iconbtn" id="btnBudget" title="支出"><i class="material-icons">attach_money</i></div>
+        </div>
+      </div>
     </div>
-  </div>
+
+    <div class="daystrip" id="dayStrip"></div>
+  </header>
+
+  <main>
+    <!-- Itinerary -->
+    <section id="viewItin">
+      <div class="cardx">
+        <div class="toolbar-row">
+          <div class="section-title" style="margin:0;">行程</div>
+          <div class="spacer"></div>
+          <a class="btn btn-small btn-teal waves-effect waves-light" id="btnAddItem"><i class="material-icons left">add</i>新增行程</a>
+        </div>
+        <div class="dividerx"></div>
+        <div id="itinList"></div>
+      </div>
+    </section>
+
+    <!-- Translate -->
+    <section id="viewTranslate" style="display:none;">
+      <div class="cardx">
+        <div class="toolbar-row">
+          <div class="section-title" style="margin:0;">Google 翻譯（免金鑰）</div>
+          <div class="spacer"></div>
+          <a class="btn btn-small btn-teal waves-effect waves-light" id="btnSwapLang"><i class="material-icons left">swap_horiz</i>交換</a>
+        </div>
+
+        <div class="dividerx"></div>
+
+        <div class="grid2">
+          <div class="input-field">
+            <select id="sl">
+              <option value="zh-TW" selected>繁中</option>
+              <option value="en">英文</option>
+              <option value="ja">日文</option>
+              <option value="th">泰文</option>
+              <option value="ko">韓文</option>
+            </select>
+            <label>來源語言</label>
+          </div>
+          <div class="input-field">
+            <select id="tl">
+              <option value="en">英文</option>
+              <option value="ja">日文</option>
+              <option value="th" selected>泰文</option>
+              <option value="ko">韓文</option>
+              <option value="zh-TW">繁中</option>
+            </select>
+            <label>目標語言</label>
+          </div>
+        </div>
+
+        <div class="input-field">
+          <textarea id="tText" class="materialize-textarea" placeholder="輸入要翻譯的文字…"></textarea>
+          <label>輸入文字</label>
+        </div>
+
+        <div class="qchips" id="quickPhrases"></div>
+
+        <div class="toolbar-row" style="margin-top:10px;">
+          <a class="btn btn-teal waves-effect waves-light" id="btnOpenTranslate"><i class="material-icons left">open_in_new</i>用 Google 翻譯開啟</a>
+          <a class="btn btn-flat waves-effect" id="btnClearTranslate"><i class="material-icons left">close</i>清空</a>
+          <div class="spacer"></div>
+          <div class="hint">會直接打開 Google Translate 網頁並帶入文字。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Budget -->
+    <section id="viewBudget" style="display:none;">
+      <div class="money-card">
+        <div class="toolbar-row" style="align-items:flex-start;">
+          <div>
+            <div class="section-title" style="margin:0;color:#e6fffb;">總支出 Total</div>
+            <p class="bigmoney" id="totalMoney">0</p>
+            <div class="money-sub" id="totalTWD">≈ NT$ 0</div>
+          </div>
+          <div class="spacer"></div>
+          <div class="ratebox">
+            <div class="small" style="opacity:.95;">匯率（每日自動更新）</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+              <div class="mono"><span id="ccyLabel">NZD</span> → TWD</div>
+              <div class="mono" style="font-weight:900;" id="rateValue">—</div>
+            </div>
+            <div class="tiny" style="opacity:.9;margin-top:4px;" id="rateStamp">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:12px;"></div>
+
+      <div class="cardx">
+        <div class="section-title">每日支出</div>
+        <div id="dailySpend" class="dailylist"></div>
+
+        <div class="dividerx"></div>
+
+        <div class="section-title">新增支出</div>
+        <div class="grid2">
+          <div class="input-field">
+            <input id="expTitle" type="text" placeholder="項目（例如：晚餐 / 交通卡）">
+            <label>項目</label>
+          </div>
+          <div class="input-field">
+            <input id="expAmt" type="number" step="0.01" placeholder="金額">
+            <label>金額</label>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="input-field">
+            <select id="expDay"></select>
+            <label>哪一天</label>
+          </div>
+          <div class="input-field">
+            <select id="ccy">
+              <option value="NZD" selected>NZD</option>
+              <option value="JPY">JPY</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="THB">THB</option>
+            </select>
+            <label>幣別</label>
+          </div>
+        </div>
+
+        <div class="toolbar-row">
+          <a class="btn btn-teal waves-effect waves-light" id="btnAddExp"><i class="material-icons left">add</i>加入</a>
+          <a class="btn btn-flat waves-effect" id="btnClearExp"><i class="material-icons left">delete</i>清空全部</a>
+          <div class="spacer"></div>
+          <div class="hint">支出保存在本機（localStorage）。</div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/materialize-css@1.0.0/dist/js/materialize.min.js"></script>
 
   <script>
-    const el = document.getElementById('swState');
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').then(reg => {
-        el.textContent = 'Service Worker：已註冊（scope: ' + reg.scope + '）';
-      }).catch(err => {
-        el.textContent = 'Service Worker：註冊失敗 → ' + (err && err.message ? err.message : String(err));
-      });
-    } else {
-      el.textContent = '此瀏覽器不支援 Service Worker（iOS 舊版本才會）';
+    /***********************
+     * Storage + Utilities
+     ***********************/
+    const LS_KEY = 'travelplan_pwa_v2';
+
+    function pad2(n){ return String(n).padStart(2,'0'); }
+    function hmToMin(hm){
+      const [h,m] = hm.split(':').map(Number);
+      return h*60+m;
     }
+    function minToHm(min){
+      min = ((min%1440)+1440)%1440;
+      const h = Math.floor(min/60), m = min%60;
+      return pad2(h)+':'+pad2(m);
+    }
+    function todayYMD(){
+      const d = new Date();
+      return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+    }
+    function uid(){
+      return Math.random().toString(16).slice(2)+Date.now().toString(16);
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if(raw) return JSON.parse(raw);
+      }catch(e){}
+      return null;
+    }
+    function saveState(){
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+    }
+
+    /***********************
+     * Default data model
+     ***********************/
+    const defaultTrip = {
+      id: 'trip-1',
+      title: 'Travel Plan',
+      start: '2026-02-26',
+      end: '2026-03-06',
+      days: 9,
+      // itinerary[dayIndex] = array of items
+      itinerary: Array.from({length:9}, (_,i)=> (i===0?[
+        {
+          id: uid(),
+          start:'09:30',
+          locked:false,
+          name:'空中纜車',
+          category:'遊樂',
+          placeName:'Queenstown Skyline Gondola',
+          address:'',
+          lat:null, lon:null,
+          stayMin:110
+        },
+        {
+          id: uid(),
+          start:'11:40',
+          locked:false,
+          name:'午餐（世界第一漢堡）',
+          category:'美食',
+          placeName:'Fergburger',
+          address:'',
+          lat:null, lon:null,
+          stayMin:60
+        },
+      ]:[])),
+      // route between items: routes[dayIndex][i] refers to route from item i to item i+1
+      routes: Array.from({length:9}, (_,d)=> (d===0?[
+        {
+          id: uid(),
+          mode:'walk', // walk | drive | transit
+          walkMin:20,
+          driveMin:8,
+          transitMin:null,
+        }
+      ]:[])),
+      budget:{
+        currency:'NZD',
+        // expenses: {id, dayIndex, title, amount, currency}
+        expenses:[]
+      },
+      fx:{
+        // cache per currency: { currency, rateToTWD, ymd }
+        cache:{}
+      }
+    };
+
+    let state = loadState() || { trip: defaultTrip };
+
+    /***********************
+     * UI Elements
+     ***********************/
+    const el = (id)=>document.getElementById(id);
+    const viewItin = el('viewItin');
+    const viewTranslate = el('viewTranslate');
+    const viewBudget = el('viewBudget');
+    const btnItin = el('btnItin');
+    const btnTranslate = el('btnTranslate');
+    const btnBudget = el('btnBudget');
+
+    let activeDay = 0;
+
+    function setView(which){
+      viewItin.style.display = which==='itin' ? '' : 'none';
+      viewTranslate.style.display = which==='tr' ? '' : 'none';
+      viewBudget.style.display = which==='bud' ? '' : 'none';
+
+      btnItin.classList.toggle('active', which==='itin');
+      btnTranslate.classList.toggle('active', which==='tr');
+      btnBudget.classList.toggle('active', which==='bud');
+
+      if(which==='itin') renderItinerary();
+      if(which==='tr') renderTranslate();
+      if(which==='bud') renderBudget();
+    }
+
+    btnItin.addEventListener('click', ()=>setView('itin'));
+    btnTranslate.addEventListener('click', ()=>setView('tr'));
+    btnBudget.addEventListener('click', ()=>setView('bud'));
+
+    /***********************
+     * Day strip
+     ***********************/
+    function renderDayStrip(){
+      const t = state.trip;
+      el('tripTitle').textContent = t.title;
+      el('tripDates').textContent = `${t.start} – ${t.end}（${t.days} 天）`;
+
+      const strip = el('dayStrip');
+      strip.innerHTML = '';
+      for(let i=0;i<t.days;i++){
+        const div = document.createElement('div');
+        div.className = 'daypill'+(i===activeDay?' active':'');
+        div.innerHTML = `<div class="d">D${i+1}</div><div class="dn">${(i+1)}</div>`;
+        div.addEventListener('click', ()=>{
+          activeDay=i;
+          renderDayStrip();
+          renderItinerary();
+          renderBudgetDaySelect();
+        });
+        strip.appendChild(div);
+      }
+    }
+
+    /***********************
+     * Itinerary: core logic
+     ***********************/
+    const CAT = [
+      {k:'美食', icon:'restaurant'},
+      {k:'購物', icon:'shopping_bag'},
+      {k:'住宿', icon:'hotel'},
+      {k:'遊樂', icon:'local_activity'},
+      {k:'交通', icon:'directions'},
+      {k:'景點', icon:'photo_camera'}
+    ];
+
+    function ensureRoutesLen(){
+      const t = state.trip;
+      for(let d=0; d<t.days; d++){
+        const items = t.itinerary[d] || [];
+        if(!t.routes[d]) t.routes[d]=[];
+        const need = Math.max(0, items.length-1);
+        while(t.routes[d].length < need){
+          t.routes[d].push({
+            id: uid(),
+            mode:'walk',
+            walkMin: 10,
+            driveMin: 5,
+            transitMin: null
+          });
+        }
+        while(t.routes[d].length > need) t.routes[d].pop();
+      }
+    }
+
+    // Recalculate start times based on: start + stay + route duration, respecting "locked"
+    function recalcDayTimes(dayIndex){
+      const t = state.trip;
+      const items = t.itinerary[dayIndex] || [];
+      const routes = t.routes[dayIndex] || [];
+      if(items.length===0) return;
+
+      // Sort by current start (stable) to keep user order
+      items.sort((a,b)=>hmToMin(a.start)-hmToMin(b.start));
+
+      let cursor = hmToMin(items[0].start);
+
+      for(let i=0;i<items.length;i++){
+        const it = items[i];
+        if(i===0){
+          cursor = it.locked ? hmToMin(it.start) : cursor;
+          if(!it.locked) it.start = minToHm(cursor);
+        }else{
+          // add route duration from previous
+          const r = routes[i-1];
+          let travel = 0;
+          if(r){
+            if(r.mode==='walk') travel = Number(r.walkMin)||0;
+            else if(r.mode==='drive') travel = Number(r.driveMin)||0;
+            else travel = Number(r.transitMin)||0;
+          }
+          cursor += travel;
+
+          if(it.locked){
+            // locked start wins, but cursor should jump to it
+            cursor = hmToMin(it.start);
+          }else{
+            it.start = minToHm(cursor);
+          }
+        }
+        // add stay
+        cursor += Number(it.stayMin)||0;
+      }
+
+      // After recalc, keep routes aligned
+      ensureRoutesLen();
+      saveState();
+    }
+
+    /***********************
+     * Geocode (no key): Nominatim
+     ***********************/
+    async function geocode(place){
+      // Nominatim usage: keep it gentle; 1 query per action
+      const q = encodeURIComponent(place);
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`;
+      const res = await fetch(url, { headers: { 'Accept':'application/json' }});
+      const js = await res.json();
+      if(js && js[0]){
+        return {
+          lat: Number(js[0].lat),
+          lon: Number(js[0].lon),
+          display: js[0].display_name
+        };
+      }
+      return null;
+    }
+
+    /***********************
+     * Routing (no key): OSRM public demo
+     * - walk + drive durations
+     * - transit: show "—" but still provide Google Maps link
+     ***********************/
+    async function routeOSRM(mode, a, b){
+      // mode: 'walking' or 'driving'
+      const url = `https://router.project-osrm.org/route/v1/${mode}/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`;
+      const res = await fetch(url);
+      const js = await res.json();
+      const sec = js?.routes?.[0]?.duration;
+      if(typeof sec === 'number') return Math.round(sec/60);
+      return null;
+    }
+
+    function gmapsDirectionsLink(a,b,mode){
+      // mode: walk | drive | transit
+      const travelmode = mode==='walk'?'walking':(mode==='drive'?'driving':'transit');
+      const origin = encodeURIComponent(`${a.lat},${a.lon}`);
+      const dest = encodeURIComponent(`${b.lat},${b.lon}`);
+      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=${travelmode}`;
+    }
+
+    /***********************
+     * Itinerary render
+     ***********************/
+    function renderItinerary(){
+      const t = state.trip;
+      ensureRoutesLen();
+
+      const list = el('itinList');
+      list.innerHTML = '';
+
+      const items = t.itinerary[activeDay] || [];
+      const routes = t.routes[activeDay] || [];
+
+      if(items.length===0){
+        list.innerHTML = `<div class="muted">今天尚無行程，按「新增行程」開始。</div>`;
+        return;
+      }
+
+      // Keep stable order by start time
+      items.sort((a,b)=>hmToMin(a.start)-hmToMin(b.start));
+
+      items.forEach((it, idx)=>{
+        const wrap = document.createElement('div');
+        wrap.className = 'item';
+
+        const addrText = it.address || (it.placeName ? '（輸入店名/景點可嘗試自動定位）' : '');
+        const locBadge = (it.lat && it.lon)
+          ? `<span class="badge-loc"><i class="material-icons" style="font-size:16px;">place</i>已定位</span>`
+          : `<span class="badge-noloc"><i class="material-icons" style="font-size:16px;">place</i>未定位</span>`;
+
+        wrap.innerHTML = `
+          <div class="item-head">
+            <div class="timebox">
+              <div class="t">${it.start}</div>
+              <div class="edit">修改</div>
+            </div>
+
+            <div class="meta">
+              <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <p class="name" title="${escapeHtml(it.name||'')}">${escapeHtml(it.name||'（未命名行程）')}</p>
+                ${locBadge}
+              </div>
+
+              <div class="place">
+                <i class="material-icons">place</i>
+                <div class="addr" title="${escapeHtml(addrText)}">${escapeHtml(addrText)}</div>
+              </div>
+
+              <div class="pillgroup" data-pills="${it.id}">
+                ${CAT.map(c=>`<span class="pill ${it.category===c.k?'active':''}" data-cat="${c.k}"><i class="material-icons">${c.icon}</i>${c.k}</span>`).join('')}
+              </div>
+
+              <div class="fieldrow">
+                <div class="input-field" style="margin:0;">
+                  <input type="text" class="inpName" data-id="${it.id}" value="${escapeAttr(it.name||'')}" placeholder="行程名稱…">
+                  <label class="active">行程名稱</label>
+                </div>
+                <div class="input-field" style="margin:0;">
+                  <input type="time" class="inpTime" data-id="${it.id}" value="${it.start}">
+                  <label class="active">開始時間</label>
+                </div>
+              </div>
+
+              <div class="fieldrow">
+                <div class="input-field" style="margin:0;">
+                  <input type="text" class="inpPlace" data-id="${it.id}" value="${escapeAttr(it.placeName||'')}" placeholder="店名/景點（輸入後可按定位）">
+                  <label class="active">地點</label>
+                </div>
+                <div class="input-field" style="margin:0;">
+                  <input type="number" class="inpStay" data-id="${it.id}" value="${Number(it.stayMin)||0}" min="0" step="5">
+                  <label class="active">停留（分鐘）</label>
+                </div>
+              </div>
+
+              <div class="toolbar-row" style="margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:10px;">
+                  <span class="small muted">鎖定時間</span>
+                  <div class="switch">
+                    <label>
+                      <input type="checkbox" class="inpLock" data-id="${it.id}" ${it.locked?'checked':''}>
+                      <span class="lever"></span>
+                    </label>
+                  </div>
+                </label>
+
+                <a class="btn btn-small btn-flat waves-effect btnLocate" data-id="${it.id}">
+                  <i class="material-icons left">my_location</i>定位
+                </a>
+
+                <div class="spacer"></div>
+                <a class="btn btn-small btn-flat waves-effect icon-danger btnDel" data-id="${it.id}">
+                  <i class="material-icons left">delete</i>刪除
+                </a>
+              </div>
+
+            </div>
+          </div>
+        `;
+
+        // Route section after item except last
+        if(idx < items.length-1){
+          const r = routes[idx];
+          const a = items[idx], b = items[idx+1];
+
+          const routeDiv = document.createElement('div');
+          routeDiv.className = 'route';
+          routeDiv.innerHTML = `
+            <div class="mode">
+              <span class="modechip ${r.mode==='walk'?'active':''}" data-mode="walk" data-idx="${idx}">
+                <i class="material-icons">directions_walk</i>步行 <span class="dur">${fmtMin(r.walkMin)}</span>
+              </span>
+              <span class="modechip ${r.mode==='drive'?'active':''}" data-mode="drive" data-idx="${idx}">
+                <i class="material-icons">directions_car</i>開車 <span class="dur">${fmtMin(r.driveMin)}</span>
+              </span>
+              <span class="modechip ${r.mode==='transit'?'active':''}" data-mode="transit" data-idx="${idx}">
+                <i class="material-icons">directions_transit</i>大眾 <span class="dur">${fmtMin(r.transitMin, true)}</span>
+              </span>
+            </div>
+            <div class="spacer"></div>
+            <a class="btn btn-small btn-flat waves-effect btnRoute" data-idx="${idx}">
+              <i class="material-icons left">route</i>路線
+            </a>
+            <a class="btn btn-small btn-flat waves-effect btnGmaps" data-idx="${idx}">
+              <i class="material-icons left">open_in_new</i>Google Maps
+            </a>
+            <div class="hint">間隔不夠可改「停留/路線時間」，未鎖定的後續時間會自動往後推。</div>
+          `;
+          wrap.appendChild(routeDiv);
+        }
+
+        list.appendChild(wrap);
+        if(idx < items.length-1) list.appendChild(document.createElement('div')).className='dividerx';
+      });
+
+      // Wire events
+      wireItinEvents();
+    }
+
+    function fmtMin(v, dashIfNull=false){
+      if(v===null || v===undefined || v==='' ){
+        return dashIfNull ? '—' : '0m';
+      }
+      const n = Number(v)||0;
+      const h = Math.floor(n/60), m = n%60;
+      if(h>0) return `${h}h ${pad2(m)}m`;
+      return `${n}m`;
+    }
+
+    function wireItinEvents(){
+      const t = state.trip;
+      const items = t.itinerary[activeDay] || [];
+      const routes = t.routes[activeDay] || [];
+
+      // Category pills
+      document.querySelectorAll('.pillgroup .pill').forEach(p=>{
+        p.addEventListener('click', ()=>{
+          const group = p.closest('.pillgroup');
+          const itemId = group.getAttribute('data-pills');
+          const cat = p.getAttribute('data-cat');
+          const it = items.find(x=>x.id===itemId);
+          if(!it) return;
+          it.category = cat;
+          saveState();
+          renderItinerary();
+        });
+      });
+
+      // Time change
+      document.querySelectorAll('.inpTime').forEach(inp=>{
+        inp.addEventListener('change', ()=>{
+          const it = items.find(x=>x.id===inp.dataset.id);
+          if(!it) return;
+          it.start = inp.value || it.start;
+          // If user manually sets time, treat as locked? (keep existing toggle)
+          recalcDayTimes(activeDay);
+          renderItinerary();
+        });
+      });
+
+      // Name
+      document.querySelectorAll('.inpName').forEach(inp=>{
+        inp.addEventListener('change', ()=>{
+          const it = items.find(x=>x.id===inp.dataset.id);
+          if(!it) return;
+          it.name = inp.value || '';
+          saveState();
+          renderItinerary();
+        });
+      });
+
+      // Place
+      document.querySelectorAll('.inpPlace').forEach(inp=>{
+        inp.addEventListener('change', ()=>{
+          const it = items.find(x=>x.id===inp.dataset.id);
+          if(!it) return;
+          it.placeName = inp.value || '';
+          saveState();
+          renderItinerary();
+        });
+      });
+
+      // Stay
+      document.querySelectorAll('.inpStay').forEach(inp=>{
+        inp.addEventListener('change', ()=>{
+          const it = items.find(x=>x.id===inp.dataset.id);
+          if(!it) return;
+          it.stayMin = Math.max(0, Number(inp.value)||0);
+          recalcDayTimes(activeDay);
+          renderItinerary();
+        });
+      });
+
+      // Lock
+      document.querySelectorAll('.inpLock').forEach(inp=>{
+        inp.addEventListener('change', ()=>{
+          const it = items.find(x=>x.id===inp.dataset.id);
+          if(!it) return;
+          it.locked = inp.checked;
+          recalcDayTimes(activeDay);
+          renderItinerary();
+        });
+      });
+
+      // Delete
+      document.querySelectorAll('.btnDel').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.dataset.id;
+          const idx = items.findIndex(x=>x.id===id);
+          if(idx>=0){
+            items.splice(idx,1);
+            ensureRoutesLen();
+            recalcDayTimes(activeDay);
+            saveState();
+            renderItinerary();
+            renderBudgetDaySelect();
+          }
+        });
+      });
+
+      // Locate
+      document.querySelectorAll('.btnLocate').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const it = items.find(x=>x.id===btn.dataset.id);
+          if(!it || !it.placeName) return M.toast({html:'請先輸入地點名稱'});
+          try{
+            M.toast({html:'定位中…'});
+            const g = await geocode(it.placeName);
+            if(!g) return M.toast({html:'找不到，換更精準的名稱（含城市/街道）'});
+            it.lat = g.lat; it.lon = g.lon;
+            it.address = g.display || '';
+            saveState();
+            renderItinerary();
+            M.toast({html:'定位完成'});
+          }catch(e){
+            M.toast({html:'定位失敗（可能被限制），稍後再試'});
+          }
+        });
+      });
+
+      // Route mode select
+      document.querySelectorAll('.modechip').forEach(ch=>{
+        ch.addEventListener('click', ()=>{
+          const idx = Number(ch.dataset.idx);
+          const mode = ch.dataset.mode;
+          const r = routes[idx];
+          if(!r) return;
+          r.mode = mode;
+
+          // If mode transit and transitMin is null, keep as null (display —)
+          recalcDayTimes(activeDay);
+          saveState();
+          renderItinerary();
+        });
+      });
+
+      // Route calculate
+      document.querySelectorAll('.btnRoute').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const idx = Number(btn.dataset.idx);
+          const a = items[idx], b = items[idx+1];
+          const r = routes[idx];
+          if(!a || !b || !r) return;
+          if(!(a.lat&&a.lon&&b.lat&&b.lon)){
+            return M.toast({html:'兩個景點都要先「已定位」才可估算'});
+          }
+          try{
+            M.toast({html:'計算路線中…'});
+            const walk = await routeOSRM('walking', a, b);
+            const drive = await routeOSRM('driving', a, b);
+            if(walk!=null) r.walkMin = walk;
+            if(drive!=null) r.driveMin = drive;
+            // transit: no free reliable API (keep null)
+            recalcDayTimes(activeDay);
+            saveState();
+            renderItinerary();
+            M.toast({html:'已更新步行/開車時間'});
+          }catch(e){
+            M.toast({html:'路線估算失敗（稍後再試）'});
+          }
+        });
+      });
+
+      // Open Google Maps
+      document.querySelectorAll('.btnGmaps').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const idx = Number(btn.dataset.idx);
+          const a = items[idx], b = items[idx+1];
+          const r = routes[idx];
+          if(!(a && b && r)) return;
+          if(!(a.lat&&a.lon&&b.lat&&b.lon)){
+            return M.toast({html:'兩個景點都要先「已定位」才可開導航'});
+          }
+          const url = gmapsDirectionsLink(a,b,r.mode);
+          window.open(url, '_blank');
+        });
+      });
+    }
+
+    // Add item
+    el('btnAddItem').addEventListener('click', ()=>{
+      const t = state.trip;
+      if(!t.itinerary[activeDay]) t.itinerary[activeDay]=[];
+      const items = t.itinerary[activeDay];
+
+      let start = '09:00';
+      if(items.length){
+        items.sort((a,b)=>hmToMin(a.start)-hmToMin(b.start));
+        const last = items[items.length-1];
+        start = minToHm(hmToMin(last.start) + (Number(last.stayMin)||0) + 10);
+      }
+
+      items.push({
+        id: uid(),
+        start,
+        locked:false,
+        name:'行程名稱…',
+        category:'景點',
+        placeName:'',
+        address:'',
+        lat:null, lon:null,
+        stayMin:60
+      });
+      ensureRoutesLen();
+      recalcDayTimes(activeDay);
+      saveState();
+      renderItinerary();
+      renderBudgetDaySelect();
+    });
+
+    /***********************
+     * Translate view
+     ***********************/
+    const QUICK = [
+      '請問這裡怎麼去？',
+      '我要點餐，謝謝。',
+      '可以刷卡嗎？',
+      '這個多少錢？',
+      '我想要一份不辣。',
+      '請幫我叫計程車。'
+    ];
+    function renderTranslate(){
+      // init selects (Materialize)
+      setTimeout(()=>{ M.FormSelect.init(document.querySelectorAll('select')); }, 0);
+
+      const box = el('quickPhrases');
+      box.innerHTML = '';
+      QUICK.forEach(s=>{
+        const c = document.createElement('div');
+        c.className='chip';
+        c.textContent = s;
+        c.addEventListener('click', ()=>{
+          const ta = el('tText');
+          ta.value = s;
+          M.textareaAutoResize(ta);
+        });
+        box.appendChild(c);
+      });
+    }
+    el('btnSwapLang').addEventListener('click', ()=>{
+      const sl = el('sl'), tl = el('tl');
+      const a = sl.value; sl.value = tl.value; tl.value = a;
+      M.FormSelect.init(document.querySelectorAll('select'));
+    });
+    el('btnOpenTranslate').addEventListener('click', ()=>{
+      const text = (el('tText').value||'').trim();
+      if(!text) return M.toast({html:'請先輸入文字'});
+      const sl = el('sl').value;
+      const tl = el('tl').value;
+      const url = `https://translate.google.com/?sl=${encodeURIComponent(sl)}&tl=${encodeURIComponent(tl)}&text=${encodeURIComponent(text)}&op=translate`;
+      window.open(url,'_blank');
+    });
+    el('btnClearTranslate').addEventListener('click', ()=>{
+      el('tText').value='';
+      M.textareaAutoResize(el('tText'));
+    });
+
+    /***********************
+     * Budget + FX (daily refresh)
+     * FX source: frankfurter.app (free, no key)
+     ***********************/
+    async function getFxToTWD(currency){
+      const cache = state.trip.fx.cache[currency];
+      const ymd = todayYMD();
+      if(cache && cache.ymd === ymd && typeof cache.rateToTWD === 'number'){
+        return cache;
+      }
+      // Fetch: base=currency, to=TWD
+      // Frankfurter supports many currencies; if some missing, fallback.
+      const url = `https://api.frankfurter.app/latest?from=${encodeURIComponent(currency)}&to=TWD`;
+      const res = await fetch(url);
+      const js = await res.json();
+      const rate = js?.rates?.TWD;
+      if(typeof rate === 'number'){
+        const obj = { currency, rateToTWD: rate, ymd };
+        state.trip.fx.cache[currency]=obj;
+        saveState();
+        return obj;
+      }
+      // fallback: keep old or 1
+      return cache || {currency, rateToTWD: 1, ymd};
+    }
+
+    function sumBudgetByDay(){
+      const t = state.trip;
+      const exp = t.budget.expenses || [];
+      const byDay = Array.from({length:t.days}, ()=>0);
+      exp.forEach(e=>{
+        if(e.currency === t.budget.currency){
+          byDay[e.dayIndex] += Number(e.amount)||0;
+        }else{
+          // keep simple: show only selected currency totals
+        }
+      });
+      return byDay;
+    }
+
+    async function renderBudget(){
+      setTimeout(()=>{ M.FormSelect.init(document.querySelectorAll('select')); }, 0);
+
+      renderBudgetDaySelect();
+
+      const t = state.trip;
+      const ccy = el('ccy');
+      ccy.value = t.budget.currency;
+      M.FormSelect.init(ccy);
+
+      // Update currency label + fetch FX
+      const cur = t.budget.currency;
+      el('ccyLabel').textContent = cur;
+
+      let fx = null;
+      try{
+        fx = await getFxToTWD(cur);
+        el('rateValue').textContent = fx.rateToTWD.toFixed(4);
+        el('rateStamp').textContent = `更新：${fx.ymd}`;
+      }catch(e){
+        el('rateValue').textContent = '—';
+        el('rateStamp').textContent = '匯率取得失敗';
+      }
+
+      // Total + daily
+      const byDay = sumBudgetByDay();
+      const total = byDay.reduce((a,b)=>a+b,0);
+      el('totalMoney').textContent = `${cur} ${fmtMoney(total)}`;
+      const twd = fx && fx.rateToTWD ? total * fx.rateToTWD : 0;
+      el('totalTWD').textContent = `≈ NT$ ${fmtMoney(twd)}`;
+
+      // Daily list
+      const dl = el('dailySpend');
+      dl.innerHTML = '';
+      byDay.forEach((amt,i)=>{
+        const d = document.createElement('div');
+        d.className='drow';
+        d.innerHTML = `<div style="font-weight:900;">D${i+1}</div><div class="mono" style="font-weight:900;">${cur} ${fmtMoney(amt)}</div>`;
+        dl.appendChild(d);
+      });
+
+      // Wire add expense
+      el('btnAddExp').onclick = ()=>{
+        const title = (el('expTitle').value||'').trim();
+        const amt = Number(el('expAmt').value||0);
+        const dayIndex = Number(el('expDay').value||0);
+        const currency = el('ccy').value;
+        if(!title) return M.toast({html:'請輸入項目'});
+        if(!(amt>0)) return M.toast({html:'金額要 > 0'});
+
+        t.budget.currency = currency;
+        t.budget.expenses.push({ id: uid(), title, amount: amt, dayIndex, currency });
+        saveState();
+
+        el('expTitle').value='';
+        el('expAmt').value='';
+        renderBudget();
+        M.toast({html:'已加入'});
+      };
+
+      el('btnClearExp').onclick = ()=>{
+        t.budget.expenses = [];
+        saveState();
+        renderBudget();
+        M.toast({html:'已清空'});
+      };
+
+      ccy.onchange = ()=>{
+        t.budget.currency = ccy.value;
+        saveState();
+        renderBudget();
+      };
+    }
+
+    function renderBudgetDaySelect(){
+      const t = state.trip;
+      const sel = el('expDay');
+      sel.innerHTML = '';
+      for(let i=0;i<t.days;i++){
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = `D${i+1}`;
+        if(i===activeDay) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      setTimeout(()=>{ M.FormSelect.init(sel); }, 0);
+    }
+
+    function fmtMoney(n){
+      n = Number(n)||0;
+      return n.toLocaleString('en-US', {maximumFractionDigits:2});
+    }
+
+    /***********************
+     * HTML escaping
+     ***********************/
+    function escapeHtml(s){
+      s = String(s ?? '');
+      return s.replace(/[&<>"']/g, c=>({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+    function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+    /***********************
+     * Init
+     ***********************/
+    document.addEventListener('DOMContentLoaded', ()=>{
+      M.AutoInit();
+      renderDayStrip();
+      ensureRoutesLen();
+      renderItinerary();
+      renderBudgetDaySelect();
+
+      // Service worker register
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(()=>{});
+      }
+    });
   </script>
 </body>
 </html>
